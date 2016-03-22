@@ -6,7 +6,7 @@ import (
 )
 
 func TestBroadcaster(t *testing.T) {
-	broadcaster := New()
+	broadcaster := NewBroadcaster()
 
 	var (
 		recvCount     int
@@ -38,7 +38,7 @@ func TestBroadcaster(t *testing.T) {
 }
 
 func TestBroadcaster_Reset(t *testing.T) {
-	broadcaster := New()
+	broadcaster := NewBroadcaster()
 
 	broadcaster.Listen()
 	broadcaster.Listen()
@@ -49,7 +49,7 @@ func TestBroadcaster_Reset(t *testing.T) {
 }
 
 func TestBroadcaster_Remove(t *testing.T) {
-	broadcaster := New()
+	broadcaster := NewBroadcaster()
 
 	listener := broadcaster.Listen()
 

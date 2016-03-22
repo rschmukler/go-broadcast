@@ -10,9 +10,9 @@ type Broadcaster struct {
 	mu sync.Mutex
 }
 
-// New builds a new generic Broadcaster. Cap is used as the buffer for each listener. If no cap
+// NewBroadcaster builds a new generic Broadcaster. Cap is used as the buffer for each listener. If no cap
 // is specified, a capacity of 0 will be used
-func New(capArg ...int) *Broadcaster {
+func NewBroadcaster(capArg ...int) *Broadcaster {
 	var cap int
 	if len(capArg) == 0 {
 		cap = 0

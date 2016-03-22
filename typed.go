@@ -20,7 +20,11 @@ func (b *ErrorBroadcaster) Listen() <-chan error {
 	listener := make(chan error, b.Broadcaster.cap)
 	go func() {
 		for data := range rawListener {
-			listener <- data.(error)
+			if data != nil {
+				listener <- data.(error)
+			} else {
+				listener <- nil
+			}
 		}
 		close(listener)
 	}()

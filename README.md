@@ -1,5 +1,7 @@
 # go-broadcast
 
+[![GoDoc](https://godoc.org/github.com/rschmukler/go-broadcast?status.svg)](https://godoc.org/github.com/rschmukler/go-broadcast)
+
 ## Example
 
 ```go

@@ -36,12 +36,12 @@ func (b *ErrorBroadcaster) Broadcast(err error) {
 	b.Broadcaster.Broadcast(err)
 }
 
-// BoolBroadcaster is a broadcaster which broadcasts errors.
+// BoolBroadcaster is a broadcaster which broadcasts booleans.
 type BoolBroadcaster struct {
 	*Broadcaster
 }
 
-// NewErrorBroadcaster builds a broadcaster for broadcasting booleans
+// NewBoolBroadcaster builds a broadcaster for broadcasting booleans
 func NewBoolBroadcaster(cap ...int) *BoolBroadcaster {
 	return &BoolBroadcaster{
 		Broadcaster: NewBroadcaster(cap...),

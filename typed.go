@@ -5,30 +5,49 @@ package broadcast
 // ErrorBroadcaster is a broadcaster which broadcasts errors.
 type ErrorBroadcaster struct {
 	*Broadcaster
+	listeners []typedListener
+}
+
+type typedListener struct {
+	raw      <-chan interface{}
+	boolOut  <-chan bool
+	errorOut <-chan error
 }
 
 // NewErrorBroadcaster builds a broadcaster for broadcasting errors
 func NewErrorBroadcaster(cap ...int) *ErrorBroadcaster {
 	return &ErrorBroadcaster{
 		Broadcaster: NewBroadcaster(cap...),
+		listeners:   []typedListener{},
 	}
 }
 
 // Listen registers a new listener for the broadcast
 func (b *ErrorBroadcaster) Listen() <-chan error {
 	rawListener := b.Broadcaster.Listen()
-	listener := make(chan error, b.Broadcaster.cap)
+	out := make(chan error, b.Broadcaster.cap)
+	b.listeners = append(b.listeners, typedListener{raw: rawListener, errorOut: out})
 	go func() {
 		for data := range rawListener {
 			if data != nil {
-				listener <- data.(error)
+				out <- data.(error)
 			} else {
-				listener <- nil
+				out <- nil
 			}
 		}
-		close(listener)
+		close(out)
 	}()
-	return listener
+	return out
+}
+
+// Remove removes a listener from the known listeners for a broadcaster, stopping it
+// from receiving further broadcasts
+func (b *ErrorBroadcaster) Remove(listener <-chan error) {
+	for _, typedListener := range b.listeners {
+		if listener == typedListener.errorOut {
+			b.Broadcaster.Remove(typedListener.raw)
+		}
+	}
 }
 
 // Broadcast broadcasts an error to all listeners
@@ -39,29 +58,42 @@ func (b *ErrorBroadcaster) Broadcast(err error) {
 // BoolBroadcaster is a broadcaster which broadcasts booleans.
 type BoolBroadcaster struct {
 	*Broadcaster
+	listeners []typedListener
 }
 
 // NewBoolBroadcaster builds a broadcaster for broadcasting booleans
 func NewBoolBroadcaster(cap ...int) *BoolBroadcaster {
 	return &BoolBroadcaster{
 		Broadcaster: NewBroadcaster(cap...),
+		listeners:   []typedListener{},
 	}
 }
 
 // Listen registers a new listener for the broadcast
 func (b *BoolBroadcaster) Listen() <-chan bool {
 	rawListener := b.Broadcaster.Listen()
-	listener := make(chan error, b.Broadcaster.cap)
+	out := make(chan bool, b.Broadcaster.cap)
+	b.listeners = append(b.listeners, typedListener{raw: rawListener, boolOut: out})
 	go func() {
 		for data := range rawListener {
-			listener <- data.(bool)
+			out <- data.(bool)
 		}
-		close(listener)
+		close(out)
 	}()
-	return listener
+	return out
 }
 
 // Broadcast broadcasts an bool to all listeners
 func (b *BoolBroadcaster) Broadcast(val bool) {
 	b.Broadcaster.Broadcast(val)
+}
+
+// Remove removes a listener from the known listeners for a broadcaster, stopping it
+// from receiving further broadcasts
+func (b *BoolBroadcaster) Remove(listener <-chan bool) {
+	for _, typedListener := range b.listeners {
+		if listener == typedListener.boolOut {
+			b.Broadcaster.Remove(typedListener.raw)
+		}
+	}
 }

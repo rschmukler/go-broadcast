@@ -2,7 +2,7 @@ package broadcast
 
 // Typed broadcasters for convenience
 
-// ErrorBroadcaster is a broadcaster which broadcasts errors
+// ErrorBroadcaster is a broadcaster which broadcasts errors.
 type ErrorBroadcaster struct {
 	*Broadcaster
 }
@@ -34,4 +34,34 @@ func (b *ErrorBroadcaster) Listen() <-chan error {
 // Broadcast broadcasts an error to all listeners
 func (b *ErrorBroadcaster) Broadcast(err error) {
 	b.Broadcaster.Broadcast(err)
+}
+
+// BoolBroadcaster is a broadcaster which broadcasts errors.
+type BoolBroadcaster struct {
+	*Broadcaster
+}
+
+// NewErrorBroadcaster builds a broadcaster for broadcasting booleans
+func NewBoolBroadcaster(cap ...int) *BoolBroadcaster {
+	return &BoolBroadcaster{
+		Broadcaster: NewBroadcaster(cap...),
+	}
+}
+
+// Listen registers a new listener for the broadcast
+func (b *BoolBroadcaster) Listen() <-chan bool {
+	rawListener := b.Broadcaster.Listen()
+	listener := make(chan error, b.Broadcaster.cap)
+	go func() {
+		for data := range rawListener {
+			listener <- data.(bool)
+		}
+		close(listener)
+	}()
+	return listener
+}
+
+// Broadcast broadcasts an bool to all listeners
+func (b *BoolBroadcaster) Broadcast(val bool) {
+	b.Broadcaster.Broadcast(val)
 }

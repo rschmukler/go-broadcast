@@ -75,7 +75,8 @@ func (b *Broadcaster) Reset() {
 	b.listeners = []chan interface{}{}
 }
 
-// Remove removes a listener from the known listeners for a broadcaster
+// Remove removes a listener from the known listeners for a broadcaster, stopping it
+// from receiving further broadcasts
 func (b *Broadcaster) Remove(listener <-chan interface{}) {
 	b.mu.Lock()
 	defer b.mu.Unlock()

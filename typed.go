@@ -12,6 +12,7 @@ type typedListener struct {
 	raw      <-chan interface{}
 	boolOut  <-chan bool
 	errorOut <-chan error
+	intOut   <-chan int
 }
 
 // NewErrorBroadcaster builds a broadcaster for broadcasting errors
@@ -93,6 +94,49 @@ func (b *BoolBroadcaster) Broadcast(val bool) {
 func (b *BoolBroadcaster) Remove(listener <-chan bool) {
 	for _, typedListener := range b.listeners {
 		if listener == typedListener.boolOut {
+			b.Broadcaster.Remove(typedListener.raw)
+		}
+	}
+}
+
+// IntBroadcaster is a broadcaster which broadcasts ints.
+type IntBroadcaster struct {
+	*Broadcaster
+	listeners []typedListener
+}
+
+// NewIntBroadcaster builds a broadcaster for broadcasting ints
+func NewIntBroadcaster(cap ...int) *IntBroadcaster {
+	return &IntBroadcaster{
+		Broadcaster: NewBroadcaster(cap...),
+		listeners:   []typedListener{},
+	}
+}
+
+// Listen registers a new listener for the broadcast
+func (b *IntBroadcaster) Listen() <-chan int {
+	rawListener := b.Broadcaster.Listen()
+	out := make(chan int, b.Broadcaster.cap)
+	b.listeners = append(b.listeners, typedListener{raw: rawListener, intOut: out})
+	go func() {
+		for data := range rawListener {
+			out <- data.(int)
+		}
+		close(out)
+	}()
+	return out
+}
+
+// Broadcast broadcasts an int to all listeners
+func (b *IntBroadcaster) Broadcast(val int) {
+	b.Broadcaster.Broadcast(val)
+}
+
+// Remove removes a listener from the known listeners for a broadcaster, stopping it
+// from receiving further broadcasts
+func (b *IntBroadcaster) Remove(listener <-chan int) {
+	for _, typedListener := range b.listeners {
+		if listener == typedListener.intOut {
 			b.Broadcaster.Remove(typedListener.raw)
 		}
 	}
